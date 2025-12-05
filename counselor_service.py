@@ -10,7 +10,6 @@ CORS(app)
 expected_parrot_key = os.getenv('EXPECTED_PARROT_API_KEY')
 if not expected_parrot_key:
     raise ValueError("EXPECTED_PARROT_API_KEY environment variable is required")
-os.environ['EXPECTED_PARROT_API_KEY'] = expected_parrot_key
 
 # Internal API key for authentication
 INTERNAL_API_KEY = os.getenv('INTERNAL_API_KEY')
@@ -27,15 +26,7 @@ def check_api_key():
 
 @app.route('/health', methods=['GET'])
 def health():
-        return jsonify({
-        "status": "healthy",
-        "env_check": {
-            "EXPECTED_PARROT_API_KEY": "set" if os.getenv('EXPECTED_PARROT_API_KEY') else "NOT SET",
-            "INTERNAL_API_KEY": "set" if os.getenv('INTERNAL_API_KEY') else "NOT SET",
-            "key_length": len(os.getenv('EXPECTED_PARROT_API_KEY', '')) if os.getenv('EXPECTED_PARROT_API_KEY') else 0
-        }
-    }), 200
-
+    return jsonify({"status": "healthy"}), 200
 
 @app.route('/ask-counselors', methods=['POST'])
 def ask_counselors():
@@ -59,25 +50,25 @@ def ask_counselors():
             question_text=question_text
         )
 
-        # Create 3 guidance counselor agents with unique perspectives
+        # Create 3 guidance counselor agents with UNIQUE personas
         agents = AgentList([
-            Agent(traits={
-                "persona": f"You are guidance counselor #{i+1}. Counselor 1 focuses on academic planning and college preparation. Counselor 2 emphasizes career development and long-term goals. Counselor 3 prioritizes student wellbeing and personal growth."
-            }) 
-            for i in range(3)
+            Agent(traits={"persona": "You are guidance counselor #1. You focus on academic planning and college preparation."}),
+            Agent(traits={"persona": "You are guidance counselor #2. You emphasize career development and long-term goals."}),
+            Agent(traits={"persona": "You are guidance counselor #3. You prioritize student wellbeing and personal growth."})
         ])
 
         # Run the survey
         results = q.by(agents).run()
 
-        # Extract results
+        # Extract results - use correct field names
         results_list = results.to_dicts()
         responses = []
         
         for i, result in enumerate(results_list):
             counselor_num = i + 1
-            advice = result.get('answer.advice', result.get('advice', 'No response provided.'))
-            persona = result.get('agent.persona', result.get('persona', f'Counselor #{counselor_num}'))
+            # Access fields without "answer." prefix after to_dicts()
+            advice = result.get('advice', 'No response provided.')
+            persona = result.get('persona', f'Counselor #{counselor_num}')
             responses.append({
                 'counselor': counselor_num,
                 'persona': persona,
@@ -95,11 +86,8 @@ def ask_counselors():
         }), 200
 
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
         print(f"Error: {str(e)}")
-        print(f"Traceback: {error_details}")
-        return jsonify({"error": str(e), "details": error_details}), 500
+        return jsonify({"error": str(e), "details": "An error occurred processing your request"}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
