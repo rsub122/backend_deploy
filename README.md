@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 2. Set your API key (if not already set):
 ```bash
-export EXPECTED_PARROT_API_KEY='S_0JnEaRvYh2BPn60q0KYWBOexJBXSGtujyN9xYzY8c'
+export EXPECTED_PARROT_API_KEY=''
 ```
 
 3. Run the service:
