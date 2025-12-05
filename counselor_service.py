@@ -87,8 +87,11 @@ def ask_counselors():
         }), 200
 
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
         print(f"Error: {str(e)}")
-        return jsonify({"error": "An error occurred processing your request"}), 500
+        print(f"Traceback: {error_details}")
+        return jsonify({"error": str(e), "details": error_details}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
