@@ -27,7 +27,15 @@ def check_api_key():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "healthy"}), 200
+        return jsonify({
+        "status": "healthy",
+        "env_check": {
+            "EXPECTED_PARROT_API_KEY": "set" if os.getenv('EXPECTED_PARROT_API_KEY') else "NOT SET",
+            "INTERNAL_API_KEY": "set" if os.getenv('INTERNAL_API_KEY') else "NOT SET",
+            "key_length": len(os.getenv('EXPECTED_PARROT_API_KEY', '')) if os.getenv('EXPECTED_PARROT_API_KEY') else 0
+        }
+    }), 200
+
 
 @app.route('/ask-counselors', methods=['POST'])
 def ask_counselors():
